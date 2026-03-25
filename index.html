@@ -1,119 +1,715 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Coast Wave QR Builder</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Coast Wave QR Designer</title>
 
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script src="https://unpkg.com/qr-code-styling@1.9.2/lib/qr-code-styling.js"></script>
 
 <style>
-body { margin:0; font-family:Arial; background:#f4f4f4; }
-.page { display:flex; height:100vh; }
-
-.left { width:350px; padding:20px; background:#fff; overflow:auto; }
-.right { flex:1; display:flex; justify-content:center; align-items:center; }
-
-input, button { width:100%; margin-top:10px; padding:10px; }
-
-.frame-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:10px; }
-
-.frame-grid img {
-width:100%;
-border:2px solid #ccc;
-cursor:pointer;
+* {
+box-sizing: border-box;
 }
 
-.frame-grid img.selected { border-color:black; }
+:root {
+--bg: #f5f7fb;
+--panel: #ffffff;
+--text: #111827;
+--muted: #6b7280;
+--line: #e5e7eb;
+--accent: #111827;
+--preview-size: 520px;
+--qr-size: 300px;
+}
 
-.preview { position:relative; width:400px; height:400px; }
+body {
+margin: 0;
+font-family: Arial, sans-serif;
+background: var(--bg);
+color: var(--text);
+}
 
-#qrCanvas { width:260px; height:260px; position:absolute; top:70px; left:70px; }
+.app {
+display: grid;
+grid-template-columns: 420px 1fr;
+gap: 24px;
+min-height: 100vh;
+padding: 24px;
+}
+
+.panel {
+background: var(--panel);
+border-radius: 20px;
+padding: 20px;
+box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+border: 1px solid var(--line);
+}
+
+.left-panel {
+overflow-y: auto;
+max-height: calc(100vh - 48px);
+}
+
+.brand-box {
+border: 1px solid var(--line);
+border-radius: 16px;
+padding: 16px;
+margin-bottom: 18px;
+background: #fafafa;
+}
+
+.brand-title {
+font-size: 28px;
+font-weight: 700;
+letter-spacing: 0.5px;
+margin: 0 0 6px 0;
+}
+
+.brand-sub {
+font-size: 13px;
+color: var(--muted);
+margin: 0;
+}
+
+.section {
+margin-top: 18px;
+padding-top: 18px;
+border-top: 1px solid var(--line);
+}
+
+.section:first-of-type {
+margin-top: 0;
+padding-top: 0;
+border-top: none;
+}
+
+h2 {
+font-size: 18px;
+margin: 0 0 12px 0;
+}
+
+h3 {
+font-size: 14px;
+margin: 0 0 8px 0;
+}
+
+label {
+display: block;
+font-size: 13px;
+font-weight: 700;
+margin-bottom: 6px;
+}
+
+input[type="text"] {
+width: 100%;
+padding: 12px;
+border: 1px solid #d1d5db;
+border-radius: 12px;
+font-size: 14px;
+outline: none;
+}
+
+input[type="text"]:focus {
+border-color: #111827;
+}
+
+input[type="color"] {
+width: 100%;
+height: 44px;
+border: 1px solid #d1d5db;
+border-radius: 10px;
+padding: 2px;
+background: white;
+cursor: pointer;
+}
+
+.hint {
+font-size: 12px;
+color: var(--muted);
+line-height: 1.45;
+margin-top: 6px;
+}
+
+.row-2 {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 12px;
+}
+
+.row-3 {
+display: grid;
+grid-template-columns: 1fr 1fr 1fr;
+gap: 10px;
+}
+
+button {
+border: none;
+border-radius: 12px;
+padding: 12px 14px;
+font-size: 14px;
+font-weight: 700;
+cursor: pointer;
+transition: 0.15s ease;
+}
+
+button:hover {
+transform: translateY(-1px);
+}
+
+.primary {
+background: #111827;
+color: white;
+}
+
+.secondary {
+background: #eef2ff;
+color: #111827;
+}
+
+.ghost {
+background: #f3f4f6;
+color: #111827;
+}
+
+.size-btn.active,
+.preset-btn.active {
+outline: 2px solid #111827;
+}
+
+.frame-grid {
+display: grid;
+grid-template-columns: repeat(4, 1fr);
+gap: 10px;
+margin-top: 10px;
+}
+
+.frame-thumb {
+width: 100%;
+aspect-ratio: 1 / 1;
+object-fit: contain;
+background: #fafafa;
+border: 2px solid #e5e7eb;
+border-radius: 12px;
+padding: 4px;
+cursor: pointer;
+}
+
+.frame-thumb.selected {
+border-color: #111827;
+background: #fff;
+}
+
+.right-panel {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: flex-start;
+overflow: hidden;
+}
+
+.preview-head {
+width: 100%;
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 14px;
+gap: 12px;
+}
+
+.preview-title {
+font-size: 24px;
+font-weight: 700;
+margin: 0;
+}
+
+.preview-sub {
+font-size: 12px;
+color: var(--muted);
+margin: 4px 0 0 0;
+}
+
+.preview-wrap {
+position: relative;
+width: var(--preview-size);
+height: var(--preview-size);
+display: flex;
+align-items: center;
+justify-content: center;
+border-radius: 28px;
+background: linear-gradient(180deg, #ffffff, #f8fafc);
+border: 1px solid var(--line);
+overflow: hidden;
+}
+
+.preview-center {
+position: relative;
+width: 100%;
+height: 100%;
+}
+
+#qrMount {
+position: absolute;
+width: var(--qr-size);
+height: var(--qr-size);
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+z-index: 1;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+#qrMount canvas,
+#qrMount svg {
+width: 100% !important;
+height: 100% !important;
+}
 
 #frameOverlay {
-position:absolute;
-width:400px;
-height:400px;
-top:0;
-left:0;
+position: absolute;
+inset: 0;
+width: 100%;
+height: 100%;
+object-fit: contain;
+z-index: 2;
+pointer-events: none;
+}
+
+.status {
+width: 100%;
+margin-top: 14px;
+color: var(--muted);
+font-size: 13px;
+min-height: 18px;
+}
+
+.small-stack > div {
+margin-bottom: 10px;
+}
+
+.footer-actions {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 10px;
+margin-top: 12px;
+}
+
+@media (max-width: 1100px) {
+.app {
+grid-template-columns: 1fr;
+}
+
+.left-panel {
+max-height: none;
+}
+
+.preview-wrap {
+width: min(92vw, 520px);
+height: min(92vw, 520px);
+}
+}
+
+@media (max-width: 640px) {
+.row-2,
+.row-3,
+.footer-actions {
+grid-template-columns: 1fr;
+}
+
+.frame-grid {
+grid-template-columns: repeat(3, 1fr);
+}
 }
 </style>
 </head>
-
 <body>
-
-<div class="page">
-
-<div class="left">
-
-<h2>QR Builder</h2>
-
-<input id="text" placeholder="Enter link or text">
-
-<label>QR Color (main)</label>
-<input type="color" id="colorMain" value="#000000">
-
-<label>Corner Outer</label>
-<input type="color" id="colorOuter" value="#000000">
-
-<label>Corner Inner</label>
-<input type="color" id="colorInner" value="#000000">
-
-<h3>Frames</h3>
-<div class="frame-grid" id="frames"></div>
-
-<button onclick="generate()">Generate</button>
-
+<div class="app">
+<div class="panel left-panel">
+<div class="brand-box">
+<p class="brand-title">Coast Wave</p>
+<p class="brand-sub">QR designer with live frame preview</p>
 </div>
 
-<div class="right">
-<div class="preview">
-<canvas id="qrCanvas"></canvas>
-<img id="frameOverlay">
+<div class="section">
+<h2>Link and actions</h2>
+
+<label for="qrText">Link or text</label>
+<input id="qrText" type="text" value="https://google.com" placeholder="Enter link or text" />
+
+<div class="footer-actions">
+<button class="primary" id="generateBtn">Generate / Demo</button>
+<button class="secondary" id="downloadBtn">Save PNG</button>
+</div>
+
+<div class="footer-actions">
+<button class="ghost" id="printBtn">Print</button>
+<button class="ghost" id="orderBtn">Order</button>
+</div>
+
+<div class="hint">
+The QR is always visible. Generating updates the code. Picking a frame never removes the QR.
 </div>
 </div>
 
+<div class="section">
+<h2>Frame and QR size together</h2>
+
+<div class="row-3">
+<button class="ghost size-btn" data-size="small">Small</button>
+<button class="ghost size-btn active" data-size="medium">Medium</button>
+<button class="ghost size-btn" data-size="large">Large</button>
+</div>
+
+<div class="hint">
+This changes the preview size and the QR fit together.
+</div>
+</div>
+
+<div class="section">
+<h2>QR colors</h2>
+
+<div class="small-stack">
+<div>
+<label for="outerColor">Corner outer squares</label>
+<input id="outerColor" type="color" value="#000000" />
+</div>
+
+<div>
+<label for="innerColor">Corner inner squares</label>
+<input id="innerColor" type="color" value="#000000" />
+</div>
+
+<div>
+<label for="mainColor">Rest of QR</label>
+<input id="mainColor" type="color" value="#000000" />
+</div>
+
+<div>
+<label for="bgColor">Background</label>
+<input id="bgColor" type="color" value="#ffffff" />
+</div>
+</div>
+
+<div class="hint">
+Use dark QR colors and a light background for best scanning.
+</div>
+</div>
+
+<div class="section">
+<h2>Color style presets</h2>
+
+<div class="row-2">
+<button class="ghost preset-btn" data-preset="regular">Regular</button>
+<button class="ghost preset-btn" data-preset="neon">Neon</button>
+<button class="ghost preset-btn" data-preset="anime80s">80s Anime</button>
+<button class="ghost preset-btn" data-preset="bubblegum">Bubblegum</button>
+</div>
+
+<div class="hint">
+These presets change the three QR color zones quickly.
+</div>
+</div>
+
+<div class="section">
+<h2>Frames</h2>
+<h3>Pick a frame</h3>
+<div class="frame-grid" id="frameGrid"></div>
+<div class="hint">
+The page attempts to load frame1.png through frame40.png and hides missing files.
+</div>
+</div>
+</div>
+
+<div class="panel right-panel">
+<div class="preview-head">
+<div>
+<p class="preview-title">Live Preview</p>
+<p class="preview-sub">QR auto-fits the frame opening area</p>
+</div>
+</div>
+
+<div class="preview-wrap" id="previewWrap">
+<div class="preview-center">
+<div id="qrMount"></div>
+<img id="frameOverlay" alt="Selected frame overlay" />
+</div>
+</div>
+
+<div class="status" id="statusText">Ready.</div>
+</div>
 </div>
 
 <script>
+const qrMount = document.getElementById("qrMount");
+const frameOverlay = document.getElementById("frameOverlay");
+const frameGrid = document.getElementById("frameGrid");
+const statusText = document.getElementById("statusText");
+
+const qrTextInput = document.getElementById("qrText");
+const outerColorInput = document.getElementById("outerColor");
+const innerColorInput = document.getElementById("innerColor");
+const mainColorInput = document.getElementById("mainColor");
+const bgColorInput = document.getElementById("bgColor");
+
+const generateBtn = document.getElementById("generateBtn");
+const downloadBtn = document.getElementById("downloadBtn");
+const printBtn = document.getElementById("printBtn");
+const orderBtn = document.getElementById("orderBtn");
+
+const sizeButtons = document.querySelectorAll(".size-btn");
+const presetButtons = document.querySelectorAll(".preset-btn");
+
 let selectedFrame = "";
+let currentSize = "medium";
+let qrCode = null;
 
-function generate() {
-const text = document.getElementById("text").value || "https://google.com";
-const color = document.getElementById("colorMain").value;
+const sizeMap = {
+small: { preview: 420, qr: 230 },
+medium: { preview: 520, qr: 300 },
+large: { preview: 620, qr: 360 }
+};
 
-QRCode.toCanvas(document.getElementById("qrCanvas"), text, {
-width:260,
-color:{ dark:color, light:"#ffffff" }
+function setStatus(message) {
+statusText.textContent = message;
+}
+
+function applySize(sizeKey) {
+currentSize = sizeKey;
+const size = sizeMap[sizeKey];
+
+document.documentElement.style.setProperty("--preview-size", size.preview + "px");
+document.documentElement.style.setProperty("--qr-size", size.qr + "px");
+
+sizeButtons.forEach(btn => {
+btn.classList.toggle("active", btn.dataset.size === sizeKey);
 });
+
+if (qrCode) {
+buildQR();
+}
+}
+
+function getQRConfig() {
+const size = sizeMap[currentSize];
+const text = qrTextInput.value.trim() || "https://google.com";
+
+return {
+width: size.qr,
+height: size.qr,
+type: "svg",
+data: text,
+margin: 0,
+qrOptions: {
+typeNumber: 0,
+mode: "Byte",
+errorCorrectionLevel: "Q"
+},
+imageOptions: {
+hideBackgroundDots: false,
+imageSize: 0.4,
+margin: 0
+},
+dotsOptions: {
+color: mainColorInput.value,
+type: "square"
+},
+backgroundOptions: {
+color: bgColorInput.value
+},
+cornersSquareOptions: {
+color: outerColorInput.value,
+type: "square"
+},
+cornersDotOptions: {
+color: innerColorInput.value,
+type: "square"
+}
+};
+}
+
+function buildQR() {
+const config = getQRConfig();
+
+if (!qrCode) {
+qrCode = new QRCodeStyling(config);
+qrMount.innerHTML = "";
+qrCode.append(qrMount);
+} else {
+qrCode.update(config);
+}
+
+setStatus("QR updated.");
+}
+
+function selectFrame(frameName, clickedImg) {
+selectedFrame = frameName;
+frameOverlay.src = frameName;
+
+document.querySelectorAll(".frame-thumb").forEach(img => {
+img.classList.remove("selected");
+});
+
+if (clickedImg) {
+clickedImg.classList.add("selected");
+}
+
+setStatus("Frame selected: " + frameName);
 }
 
 function loadFrames() {
-const container = document.getElementById("frames");
-
 for (let i = 1; i <= 40; i++) {
-const name = "frame" + i + ".png";
-
+const frameName = `frame${i}.png`;
 const img = document.createElement("img");
-img.src = name;
 
-img.onclick = () => {
-document.querySelectorAll(".frame-grid img").forEach(x=>x.classList.remove("selected"));
-img.classList.add("selected");
+img.src = frameName;
+img.alt = frameName;
+img.className = "frame-thumb";
 
-selectedFrame = name;
-document.getElementById("frameOverlay").src = name;
+img.addEventListener("click", () => {
+selectFrame(frameName, img);
+});
+
+img.onerror = () => {
+img.remove();
 };
 
-img.onerror = () => img.style.display = "none";
+frameGrid.appendChild(img);
+}
+}
 
-container.appendChild(img);
+function applyPreset(name) {
+presetButtons.forEach(btn => {
+btn.classList.toggle("active", btn.dataset.preset === name);
+});
+
+if (name === "regular") {
+outerColorInput.value = "#000000";
+innerColorInput.value = "#000000";
+mainColorInput.value = "#000000";
+bgColorInput.value = "#ffffff";
+}
+
+if (name === "neon") {
+outerColorInput.value = "#00e5ff";
+innerColorInput.value = "#ff00c8";
+mainColorInput.value = "#8a2eff";
+bgColorInput.value = "#ffffff";
+}
+
+if (name === "anime80s") {
+outerColorInput.value = "#00bcd4";
+innerColorInput.value = "#ff6ec7";
+mainColorInput.value = "#7c4dff";
+bgColorInput.value = "#ffffff";
+}
+
+if (name === "bubblegum") {
+outerColorInput.value = "#ff5ca8";
+innerColorInput.value = "#ff8fd1";
+mainColorInput.value = "#ff3d81";
+bgColorInput.value = "#ffffff";
+}
+
+buildQR();
+setStatus("Preset applied: " + name);
+}
+
+async function downloadComposite() {
+try {
+setStatus("Preparing PNG...");
+
+const size = sizeMap[currentSize];
+const exportSize = 1400;
+const qrSize = Math.round(exportSize * (size.qr / size.preview));
+const qrX = Math.round((exportSize - qrSize) / 2);
+const qrY = Math.round((exportSize - qrSize) / 2);
+
+const qrBlob = await qrCode.getRawData("png");
+const qrUrl = URL.createObjectURL(qrBlob);
+
+const qrImg = new Image();
+qrImg.src = qrUrl;
+
+await new Promise((resolve, reject) => {
+qrImg.onload = resolve;
+qrImg.onerror = reject;
+});
+
+const canvas = document.createElement("canvas");
+canvas.width = exportSize;
+canvas.height = exportSize;
+const ctx = canvas.getContext("2d");
+
+ctx.fillStyle = bgColorInput.value;
+ctx.fillRect(0, 0, exportSize, exportSize);
+
+ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+
+if (selectedFrame) {
+const frameImg = new Image();
+frameImg.src = selectedFrame;
+
+await new Promise((resolve, reject) => {
+frameImg.onload = resolve;
+frameImg.onerror = reject;
+});
+
+ctx.drawImage(frameImg, 0, 0, exportSize, exportSize);
+}
+
+URL.revokeObjectURL(qrUrl);
+
+const link = document.createElement("a");
+link.download = "coast-wave-qr.png";
+link.href = canvas.toDataURL("image/png");
+link.click();
+
+setStatus("PNG downloaded.");
+} catch (error) {
+console.error(error);
+setStatus("Download failed.");
 }
 }
+
+function printPreview() {
+downloadComposite();
+setStatus("PNG prepared. Use your system print if needed.");
+}
+
+function handleOrder() {
+const text = encodeURIComponent(qrTextInput.value.trim() || "https://google.com");
+window.location.href = `mailto:?subject=Coast Wave QR Order&body=I want to order this QR design.%0D%0A%0D%0ALink or text:%20${text}`;
+}
+
+generateBtn.addEventListener("click", buildQR);
+downloadBtn.addEventListener("click", downloadComposite);
+printBtn.addEventListener("click", printPreview);
+orderBtn.addEventListener("click", handleOrder);
+
+sizeButtons.forEach(btn => {
+btn.addEventListener("click", () => {
+applySize(btn.dataset.size);
+});
+});
+
+presetButtons.forEach(btn => {
+btn.addEventListener("click", () => {
+applyPreset(btn.dataset.preset);
+});
+});
+
+[outerColorInput, innerColorInput, mainColorInput, bgColorInput].forEach(input => {
+input.addEventListener("input", buildQR);
+});
+
+qrTextInput.addEventListener("input", buildQR);
 
 loadFrames();
-generate();
+applySize("medium");
+buildQR();
+applyPreset("regular");
 </script>
-
 </body>
 </html>
