@@ -1,371 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Coast Wave QR Builder</title>
+
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
 <style>
-* {
-box-sizing: border-box;
+body { margin:0; font-family:Arial; background:#f4f4f4; }
+.page { display:flex; height:100vh; }
+
+.left { width:350px; padding:20px; background:#fff; overflow:auto; }
+.right { flex:1; display:flex; justify-content:center; align-items:center; }
+
+input, button { width:100%; margin-top:10px; padding:10px; }
+
+.frame-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:10px; }
+
+.frame-grid img {
+width:100%;
+border:2px solid #ccc;
+cursor:pointer;
 }
 
-body {
-margin: 0;
-font-family: Arial, sans-serif;
-background: #f4f4f4;
-color: #111;
-}
+.frame-grid img.selected { border-color:black; }
 
-.page {
-display: flex;
-min-height: 100vh;
-gap: 24px;
-padding: 24px;
-}
+.preview { position:relative; width:400px; height:400px; }
 
-.left-panel {
-width: 380px;
-background: white;
-border-radius: 16px;
-padding: 20px;
-box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-overflow-y: auto;
-}
-
-.right-panel {
-flex: 1;
-background: white;
-border-radius: 16px;
-padding: 20px;
-box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: flex-start;
-}
-
-h1 {
-margin-top: 0;
-font-size: 28px;
-}
-
-h2 {
-margin-top: 24px;
-margin-bottom: 12px;
-font-size: 18px;
-}
-
-label {
-display: block;
-margin-bottom: 6px;
-font-weight: bold;
-font-size: 14px;
-}
-
-input[type="text"] {
-width: 100%;
-padding: 12px;
-border: 1px solid #ccc;
-border-radius: 10px;
-font-size: 14px;
-margin-bottom: 14px;
-}
-
-input[type="color"] {
-width: 100%;
-height: 46px;
-border: none;
-background: none;
-padding: 0;
-margin-bottom: 14px;
-cursor: pointer;
-}
-
-button {
-width: 100%;
-padding: 14px;
-border: none;
-border-radius: 10px;
-background: black;
-color: white;
-font-size: 15px;
-cursor: pointer;
-margin-top: 8px;
-}
-
-button:hover {
-opacity: 0.92;
-}
-
-.small-note {
-font-size: 12px;
-color: #666;
-margin-top: -6px;
-margin-bottom: 10px;
-}
-
-.frame-grid {
-display: grid;
-grid-template-columns: repeat(3, 1fr);
-gap: 10px;
-}
-
-.frame-thumb {
-width: 100%;
-aspect-ratio: 1 / 1;
-object-fit: contain;
-border: 2px solid #ddd;
-border-radius: 10px;
-background: #fafafa;
-padding: 4px;
-cursor: pointer;
-}
-
-.frame-thumb.selected {
-border-color: black;
-}
-
-.preview-title {
-font-size: 22px;
-margin-bottom: 20px;
-font-weight: bold;
-}
-
-.preview-wrap {
-position: relative;
-width: 420px;
-height: 420px;
-display: flex;
-align-items: center;
-justify-content: center;
-background: #fff;
-border-radius: 18px;
-}
-
-#qrCanvas {
-width: 270px;
-height: 270px;
-z-index: 1;
-background: transparent;
-}
+#qrCanvas { width:260px; height:260px; position:absolute; top:70px; left:70px; }
 
 #frameOverlay {
-position: absolute;
-top: 0;
-left: 0;
-width: 420px;
-height: 420px;
-object-fit: contain;
-pointer-events: none;
-z-index: 2;
-}
-
-.download-row {
-width: 100%;
-max-width: 420px;
-margin-top: 24px;
-}
-
-.status {
-margin-top: 14px;
-font-size: 13px;
-color: #444;
-min-height: 18px;
-}
-
-@media (max-width: 900px) {
-.page {
-flex-direction: column;
-}
-
-.left-panel {
-width: 100%;
-}
-
-.preview-wrap {
-width: 320px;
-height: 320px;
-}
-
-#frameOverlay {
-width: 320px;
-height: 320px;
-}
-
-#qrCanvas {
-width: 210px;
-height: 210px;
-}
+position:absolute;
+width:400px;
+height:400px;
+top:0;
+left:0;
 }
 </style>
 </head>
+
 <body>
+
 <div class="page">
-<div class="left-panel">
-<h1>Coast Wave QR Builder</h1>
 
-<label for="qrText">Link or Text</label>
-<input id="qrText" type="text" placeholder="Enter URL or text" />
+<div class="left">
 
-<label for="qrColor">QR Color</label>
-<input id="qrColor" type="color" value="#000000" />
-<div class="small-note">Use darker colors for better scanning.</div>
+<h2>QR Builder</h2>
 
-<label for="bgColor">QR Background Color</label>
-<input id="bgColor" type="color" value="#ffffff" />
-<div class="small-note">Use a light background for better scanning.</div>
+<input id="text" placeholder="Enter link or text">
 
-<h2>Choose Frame</h2>
-<div class="frame-grid" id="frameGrid"></div>
+<label>QR Color (main)</label>
+<input type="color" id="colorMain" value="#000000">
 
-<button onclick="generateQR()">Generate QR</button>
-<button onclick="downloadPreview()">Download PNG</button>
+<label>Corner Outer</label>
+<input type="color" id="colorOuter" value="#000000">
 
-<div class="status" id="statusText"></div>
+<label>Corner Inner</label>
+<input type="color" id="colorInner" value="#000000">
+
+<h3>Frames</h3>
+<div class="frame-grid" id="frames"></div>
+
+<button onclick="generate()">Generate</button>
+
 </div>
 
-<div class="right-panel">
-<div class="preview-title">Live Preview</div>
-
-<div class="preview-wrap" id="previewWrap">
-<canvas id="qrCanvas" width="270" height="270"></canvas>
-<img id="frameOverlay" src="" alt="" />
+<div class="right">
+<div class="preview">
+<canvas id="qrCanvas"></canvas>
+<img id="frameOverlay">
+</div>
 </div>
 
-<div class="download-row"></div>
-</div>
 </div>
 
 <script>
-const frameFiles = [
-"frame1.png",
-"frame10.png",
-"frame11.png",
-"frame12.png",
-"frame13.png",
-"frame14.png",
-"frame15.png"
-];
-
 let selectedFrame = "";
-let lastQRText = "";
 
-function setStatus(message) {
-document.getElementById("statusText").textContent = message;
+function generate() {
+const text = document.getElementById("text").value || "https://google.com";
+const color = document.getElementById("colorMain").value;
+
+QRCode.toCanvas(document.getElementById("qrCanvas"), text, {
+width:260,
+color:{ dark:color, light:"#ffffff" }
+});
 }
 
 function loadFrames() {
-const grid = document.getElementById("frameGrid");
+const container = document.getElementById("frames");
 
-frameFiles.forEach((frameName) => {
+for (let i = 1; i <= 40; i++) {
+const name = "frame" + i + ".png";
+
 const img = document.createElement("img");
-img.src = frameName;
-img.alt = frameName;
-img.className = "frame-thumb";
+img.src = name;
 
-img.addEventListener("click", () => {
-document.querySelectorAll(".frame-thumb").forEach(el => {
-el.classList.remove("selected");
-});
-
+img.onclick = () => {
+document.querySelectorAll(".frame-grid img").forEach(x=>x.classList.remove("selected"));
 img.classList.add("selected");
-selectedFrame = frameName;
-document.getElementById("frameOverlay").src = frameName;
-setStatus("Frame selected: " + frameName);
-});
 
-img.onerror = () => {
-img.style.display = "none";
+selectedFrame = name;
+document.getElementById("frameOverlay").src = name;
 };
 
-grid.appendChild(img);
-});
-}
+img.onerror = () => img.style.display = "none";
 
-function generateQR() {
-const text = document.getElementById("qrText").value.trim();
-const qrColor = document.getElementById("qrColor").value;
-const bgColor = document.getElementById("bgColor").value;
-const canvas = document.getElementById("qrCanvas");
-
-if (!text) {
-setStatus("Enter text or a link first.");
-return;
-}
-
-lastQRText = text;
-
-QRCode.toCanvas(
-canvas,
-text,
-{
-width: 270,
-margin: 1,
-color: {
-dark: qrColor,
-light: bgColor
-}
-},
-function (error) {
-if (error) {
-console.error(error);
-setStatus("QR generation failed.");
-return;
-}
-
-setStatus("QR generated.");
-}
-);
-}
-
-function downloadPreview() {
-const qrCanvas = document.getElementById("qrCanvas");
-
-if (!lastQRText) {
-setStatus("Generate the QR first.");
-return;
-}
-
-const exportCanvas = document.createElement("canvas");
-exportCanvas.width = 1200;
-exportCanvas.height = 1200;
-const ctx = exportCanvas.getContext("2d");
-
-ctx.fillStyle = "#ffffff";
-ctx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-
-const qrSize = 760;
-const qrX = (exportCanvas.width - qrSize) / 2;
-const qrY = (exportCanvas.height - qrSize) / 2;
-
-ctx.drawImage(qrCanvas, qrX, qrY, qrSize, qrSize);
-
-if (selectedFrame) {
-const frameImg = new Image();
-frameImg.crossOrigin = "anonymous";
-frameImg.onload = function () {
-ctx.drawImage(frameImg, 0, 0, exportCanvas.width, exportCanvas.height);
-
-const link = document.createElement("a");
-link.download = "coast-wave-qr.png";
-link.href = exportCanvas.toDataURL("image/png");
-link.click();
-
-setStatus("PNG downloaded.");
-};
-frameImg.src = selectedFrame;
-} else {
-const link = document.createElement("a");
-link.download = "coast-wave-qr.png";
-link.href = exportCanvas.toDataURL("image/png");
-link.click();
-
-setStatus("PNG downloaded.");
+container.appendChild(img);
 }
 }
 
 loadFrames();
+generate();
 </script>
+
 </body>
 </html>
